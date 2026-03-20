@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Карта мировых потоков СПГ — 2025 / Цены март 2026</title>
-<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
-<script src="https://cdn.jsdelivr.net/npm/topojson-client@3"></script>
+<script src="https://cdn.jsdelivr.net/npm/d3@7" onerror="window._d3fail=true"></script>
+<script src="https://cdn.jsdelivr.net/npm/topojson-client@3" onerror="window._d3fail=true"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root {
@@ -327,6 +327,21 @@ svg { width: 100%; height: 100%; display: block; }
 <body>
 
 <div id="map-container">
+  <!-- Fallback: shows while loading, replaced by map on success -->
+  <div id="map-fallback" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:50;background:var(--bg);text-align:center;padding:2rem;">
+    <div id="fb-spinner" style="width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 1s linear infinite;margin-bottom:1.2rem;"></div>
+    <div id="fb-text" style="color:var(--text);font-size:0.85rem;max-width:320px;line-height:1.6;">Загружаем карту...</div>
+  </div>
+  <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+
+  <noscript>
+    <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:60;background:var(--bg);text-align:center;padding:2rem;">
+      <div style="color:var(--text);font-size:0.9rem;max-width:340px;line-height:1.7;">
+        Для отображения интерактивной карты необходимо включить JavaScript в настройках браузера.
+      </div>
+    </div>
+  </noscript>
+
   <div class="title-bar">
     <div>
       <h1>Глобальные потоки СПГ · 2025</h1>
@@ -377,6 +392,20 @@ svg { width: 100%; height: 100%; display: block; }
 </div>
 
 <script>
+// Check if D3 and TopoJSON loaded from CDN
+if (typeof d3 === 'undefined' || typeof topojson === 'undefined' || window._d3fail) {
+  const fb = document.getElementById('map-fallback');
+  if (fb) {
+    const spinner = document.getElementById('fb-spinner');
+    if (spinner) spinner.style.display = 'none';
+    const txt = document.getElementById('fb-text');
+    if (txt) txt.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.8rem;">🌐</div>' +
+      '<div style="color:#eef1f7;font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">Карта не загрузилась</div>' +
+      '<div style="color:#8a92a6;font-size:0.8rem;line-height:1.6;">Браузер не смог загрузить библиотеки для карты.<br><br>' +
+      'Попробуйте:<br>• Открыть ссылку в браузере (Chrome, Safari)<br>• Подключиться к Wi-Fi<br>• Обновить страницу</div>';
+  }
+} else {
+
 // ══════════════════════════════════════════
 // 2025 DATA (Kpler, EIA, GIIGNL, Reuters)
 // ══════════════════════════════════════════
@@ -506,6 +535,10 @@ function hideTooltip() { tooltip.classed('show',false); }
 const worldUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 
 d3.json(worldUrl).then(world => {
+  // Map loaded — hide fallback
+  const fb = document.getElementById('map-fallback');
+  if (fb) fb.style.display = 'none';
+
   const countries = topojson.feature(world, world.objects.countries);
   const defs = svg.append('defs');
 
@@ -630,9 +663,33 @@ d3.json(worldUrl).then(world => {
 
 
 }).catch(err => {
-  g.append('text').attr('x',width/2).attr('y',height/2).attr('text-anchor','middle')
-    .attr('fill','var(--text)').attr('font-size','14px').text('Для загрузки карты необходимо подключение к интернету');
+  const fb = document.getElementById('map-fallback');
+  if (fb) {
+    const spinner = document.getElementById('fb-spinner');
+    if (spinner) spinner.style.display = 'none';
+    const txt = document.getElementById('fb-text');
+    if (txt) txt.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.8rem;">🌐</div>' +
+      '<div style="color:var(--heading);font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">Карта не загрузилась</div>' +
+      '<div style="color:var(--text);font-size:0.8rem;line-height:1.6;">Для отображения интерактивной карты нужен доступ к cdn.jsdelivr.net.<br><br>' +
+      'Попробуйте:<br>• Открыть ссылку в браузере (Chrome, Safari)<br>• Подключиться к Wi-Fi<br>• Обновить страницу</div>';
+  }
 });
+
+// Timeout fallback — if D3 didn't even load
+setTimeout(() => {
+  const fb = document.getElementById('map-fallback');
+  if (fb && fb.style.display !== 'none') {
+    const spinner = document.getElementById('fb-spinner');
+    if (spinner) spinner.style.display = 'none';
+    const txt = document.getElementById('fb-text');
+    if (txt && !txt.innerHTML.includes('не загрузилась')) {
+      txt.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.8rem;">⏳</div>' +
+        '<div style="color:var(--heading);font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">Загрузка занимает больше времени</div>' +
+        '<div style="color:var(--text);font-size:0.8rem;line-height:1.6;">Библиотеки D3.js грузятся с CDN (~500 КБ).<br><br>' +
+        'На мобильном интернете это может занять до 30 секунд. Если карта не появится — попробуйте через Wi-Fi или откройте на компьютере.</div>';
+    }
+  }
+}, 10000);
 
 // Stats panel — top exporters 
 const statsPanel = document.querySelector('.stats-panel');
@@ -681,63 +738,13 @@ document.querySelectorAll('.mob-tab').forEach(tab => {
 const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
 if (isMobile) {
   document.getElementById('map-container').addEventListener('click', function(e) {
-    // If tap wasn't on an SVG circle/path, hide tooltip
     if (e.target.tagName === 'svg' || e.target.classList.contains('country')) {
       document.getElementById('tooltip').classList.remove('show');
     }
   });
 }
 
-// ── LIVE PRICE FETCHER ──
-// Tries oilpriceapi.com (free tier, no key needed for basic quotes)
-// Updates panel + mobile panel. Falls back to hardcoded if offline.
-(async function fetchLivePrices() {
-  const R = 35.315; // $/MMBtu → $/тыс. м³
-  const codes = {
-    'NATURAL_GAS_USD':     { el:'p-hh',   mul: R },
-    'JKM_LNG_USD':         { el:'p-jkm',  mul: R },
-    'WAHA_NATURAL_GAS_USD':{ el:'p-waha', mul: R },
-  };
-  let ok = 0;
-  for (const [code, cfg] of Object.entries(codes)) {
-    try {
-      const r = await fetch('https://api.oilpriceapi.com/v1/prices/latest?by_code=' + code, { signal: AbortSignal.timeout(5000) });
-      if (!r.ok) continue;
-      const d = await r.json();
-      const raw = d?.data?.price;
-      if (raw == null) continue;
-      const v = Math.round(raw * cfg.mul);
-      const s = v < 0 ? '−$' + Math.abs(v) : '$' + v;
-      for (const suffix of ['', '-m']) {
-        const el = document.getElementById(cfg.el + suffix);
-        if (el) el.textContent = s;
-      }
-      ok++;
-    } catch(e) { /* offline or blocked */ }
-  }
-  // TTF via same API (EUR/MWh → need conversion)
-  try {
-    const r = await fetch('https://api.oilpriceapi.com/v1/prices/latest?by_code=EU_NATURAL_GAS_EUR', { signal: AbortSignal.timeout(5000) });
-    if (r.ok) {
-      const d = await r.json();
-      const eur = d?.data?.price;
-      if (eur) {
-        const tcm = Math.round(eur * 10.36 * 1.148); // €/MWh × 10.36 м³/МВт·ч × EUR/USD (18.03.2026)
-        const s = '$' + tcm;
-        for (const id of ['p-ttf','p-ttf-m']) { const el = document.getElementById(id); if(el) el.textContent = s; }
-        // NBP ≈ TTF × 0.95
-        const nbp = Math.round(tcm * 0.95);
-        for (const id of ['p-nbp','p-nbp-m']) { const el = document.getElementById(id); if(el) el.textContent = '$'+nbp; }
-        ok += 2;
-      }
-    }
-  } catch(e) {}
-  if (ok > 0) {
-    const n = new Date();
-    const ts = n.getDate().toString().padStart(2,'0') + '.' + (n.getMonth()+1).toString().padStart(2,'0') + '.' + n.getFullYear() + ' ' + n.getHours().toString().padStart(2,'0') + ':' + n.getMinutes().toString().padStart(2,'0') + ' LIVE';
-    for (const id of ['price-timestamp','price-timestamp-m']) { const el = document.getElementById(id); if(el) el.textContent = ts; }
-  }
-})();
+} // end of else (D3 loaded successfully)
 </script>
 </body>
 </html>
