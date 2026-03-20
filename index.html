@@ -31,11 +31,13 @@ body {
   font-family: var(--sans);
   overflow: hidden;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
 }
 #map-container {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   position: relative;
   touch-action: none;
   -webkit-user-select: none;
@@ -313,21 +315,46 @@ svg { width: 100%; height: 100%; display: block; touch-action: none; }
 @media (max-width: 768px) {
   .stats-panel { display: none; }
   .legend {
-    bottom: 0.5rem;
-    left: 0.5rem;
-    padding: 0.5rem 0.7rem;
-    min-width: 150px;
-    font-size: 0.85em;
+    top: 3rem;
+    bottom: auto;
+    left: 0;
+    right: 0;
+    min-width: auto;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: 0.4rem 0.8rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(30,34,46,0.88);
+    backdrop-filter: blur(12px);
   }
-  .legend-title { font-size: 0.55rem; margin-bottom: 0.4rem; }
-  .legend-item { font-size: 0.68rem; margin-bottom: 0.3rem; }
+  .legend-title {
+    font-size: 0.5rem;
+    margin-bottom: 0;
+    margin-right: 0.3rem;
+  }
+  .legend-item {
+    font-size: 0.62rem;
+    margin-bottom: 0;
+  }
+  .legend-dot { width: 6px; height: 6px; }
+  .legend-line { width: 16px; }
   .mobile-tabs { display: block; }
-  .controls { top: auto; bottom: 4rem; left: 0.5rem; }
-  .ctrl-btn { width: 36px; height: 36px; font-size: 1rem; }
-  .title-bar { padding: 0.8rem 1rem; }
-  .title-bar h1 { font-size: 0.9rem; }
-  .title-bar .subtitle { font-size: 0.6rem; }
-  .tooltip { font-size: 0.72rem; max-width: 220px; }
+  .controls {
+    top: auto;
+    bottom: 1rem;
+    right: 0.5rem;
+    left: auto;
+  }
+  .ctrl-btn { width: 40px; height: 40px; font-size: 1.2rem; }
+  .title-bar { padding: 0.6rem 0.8rem; }
+  .title-bar h1 { font-size: 0.85rem; }
+  .title-bar .subtitle { font-size: 0.55rem; }
+  .crisis-tag { font-size: 0.45rem; }
+  .tooltip { font-size: 0.7rem; max-width: 200px; }
 }
 
 @media (min-width: 769px) {
@@ -376,7 +403,7 @@ svg { width: 100%; height: 100%; display: block; touch-action: none; }
     <div class="legend-item"><div class="legend-dot" style="background:var(--import)"></div>Импортёр</div>
     <div class="legend-item"><div class="legend-dot" style="background:var(--danger);box-shadow:0 0 8px var(--danger)"></div>Ормуз · закрыт</div>
     <div class="legend-item"><div class="legend-line" style="background:linear-gradient(90deg,var(--export),var(--import))"></div>Торговый поток</div>
-    <div class="legend-item" style="font-size:0.68rem;color:var(--text);margin-top:0.3rem">Толщина = объём (MTPA)<br>Данные — 2025 год (Kpler/EIA/GIIGNL)</div>
+    <div class="legend-item" style="font-size:0.62rem;color:var(--text)">Толщина линии = объём (MTPA) · 2025</div>
   </div>
 
   <!-- Mobile panels -->
@@ -411,10 +438,19 @@ if (typeof d3 === 'undefined' || typeof topojson === 'undefined' || window._d3fa
     const spinner = document.getElementById('fb-spinner');
     if (spinner) spinner.style.display = 'none';
     const txt = document.getElementById('fb-text');
-    if (txt) txt.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.8rem;">🌐</div>' +
-      '<div style="color:#eef1f7;font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">Карта не загрузилась</div>' +
-      '<div style="color:#8a92a6;font-size:0.8rem;line-height:1.6;">Браузер не смог загрузить библиотеки для карты.<br><br>' +
-      'Попробуйте:<br>• Открыть ссылку в браузере (Chrome, Safari)<br>• Подключиться к Wi-Fi<br>• Обновить страницу</div>';
+    const url = window.location.href;
+    if (txt) txt.innerHTML = '<div style="font-size:2rem;margin-bottom:1rem;">🗺️</div>' +
+      '<div style="color:#eef1f7;font-size:1rem;font-weight:600;margin-bottom:0.6rem;">Карта не загрузилась</div>' +
+      '<div style="color:#8a92a6;font-size:0.82rem;line-height:1.6;margin-bottom:1.2rem;">' +
+      'Встроенный браузер не поддерживает интерактивную карту.<br>Откройте в полноценном браузере:</div>' +
+      '<a href="' + url + '" target="_blank" rel="noopener" style="' +
+        'display:inline-block;background:#3b82f6;color:#fff;font-size:0.9rem;font-weight:600;' +
+        'padding:0.7rem 1.5rem;border-radius:8px;text-decoration:none;margin-bottom:0.8rem;' +
+        'box-shadow:0 4px 12px rgba(59,130,246,0.3);">' +
+        '↗ Открыть в Safari</a>' +
+      '<div style="color:#6b7280;font-size:0.7rem;margin-top:0.5rem;">или скопируйте ссылку:</div>' +
+      '<div style="color:#8a92a6;font-family:monospace;font-size:0.65rem;margin-top:0.4rem;' +
+        'background:rgba(255,255,255,0.05);padding:0.4rem 0.6rem;border-radius:4px;word-break:break-all;">' + url + '</div>';
   }
 } else {
 
@@ -680,14 +716,23 @@ d3.json(worldUrl).then(world => {
     const spinner = document.getElementById('fb-spinner');
     if (spinner) spinner.style.display = 'none';
     const txt = document.getElementById('fb-text');
-    if (txt) txt.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.8rem;">🌐</div>' +
-      '<div style="color:var(--heading);font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">Карта не загрузилась</div>' +
-      '<div style="color:var(--text);font-size:0.8rem;line-height:1.6;">Для отображения интерактивной карты нужен доступ к cdn.jsdelivr.net.<br><br>' +
-      'Попробуйте:<br>• Открыть ссылку в браузере (Chrome, Safari)<br>• Подключиться к Wi-Fi<br>• Обновить страницу</div>';
+    const url = window.location.href;
+    if (txt) txt.innerHTML = '<div style="font-size:2rem;margin-bottom:1rem;">🗺️</div>' +
+      '<div style="color:#eef1f7;font-size:1rem;font-weight:600;margin-bottom:0.6rem;">Карта не загрузилась</div>' +
+      '<div style="color:#8a92a6;font-size:0.82rem;line-height:1.6;margin-bottom:1.2rem;">' +
+      'Встроенный браузер не смог загрузить данные.<br>Откройте в Safari или Chrome:</div>' +
+      '<a href="' + url + '" target="_blank" rel="noopener" style="' +
+        'display:inline-block;background:#3b82f6;color:#fff;font-size:0.9rem;font-weight:600;' +
+        'padding:0.7rem 1.5rem;border-radius:8px;text-decoration:none;margin-bottom:0.8rem;' +
+        'box-shadow:0 4px 12px rgba(59,130,246,0.3);">' +
+        '↗ Открыть в Safari</a>' +
+      '<div style="color:#6b7280;font-size:0.7rem;margin-top:0.5rem;">или скопируйте ссылку:</div>' +
+      '<div style="color:#8a92a6;font-family:monospace;font-size:0.65rem;margin-top:0.4rem;' +
+        'background:rgba(255,255,255,0.05);padding:0.4rem 0.6rem;border-radius:4px;word-break:break-all;">' + url + '</div>';
   }
 });
 
-// Timeout fallback — if D3 didn't even load
+// Timeout fallback — 5 seconds, then show "Open in Safari" button
 setTimeout(() => {
   const fb = document.getElementById('map-fallback');
   if (fb && fb.style.display !== 'none') {
@@ -695,13 +740,22 @@ setTimeout(() => {
     if (spinner) spinner.style.display = 'none';
     const txt = document.getElementById('fb-text');
     if (txt && !txt.innerHTML.includes('не загрузилась')) {
-      txt.innerHTML = '<div style="font-size:1.5rem;margin-bottom:0.8rem;">⏳</div>' +
-        '<div style="color:var(--heading);font-size:0.95rem;font-weight:600;margin-bottom:0.5rem;">Загрузка занимает больше времени</div>' +
-        '<div style="color:var(--text);font-size:0.8rem;line-height:1.6;">Библиотеки D3.js грузятся с CDN (~500 КБ).<br><br>' +
-        'На мобильном интернете это может занять до 30 секунд. Если карта не появится — попробуйте через Wi-Fi или откройте на компьютере.</div>';
+      const url = window.location.href;
+      txt.innerHTML = '<div style="font-size:2rem;margin-bottom:1rem;">🗺️</div>' +
+        '<div style="color:#eef1f7;font-size:1rem;font-weight:600;margin-bottom:0.6rem;">Карта загружается медленно</div>' +
+        '<div style="color:#8a92a6;font-size:0.82rem;line-height:1.6;margin-bottom:1.2rem;">' +
+        'Встроенный браузер Telegram ограничивает загрузку.<br>Откройте в полноценном браузере:</div>' +
+        '<a href="' + url + '" target="_blank" rel="noopener" style="' +
+          'display:inline-block;background:#3b82f6;color:#fff;font-size:0.9rem;font-weight:600;' +
+          'padding:0.7rem 1.5rem;border-radius:8px;text-decoration:none;margin-bottom:0.8rem;' +
+          'box-shadow:0 4px 12px rgba(59,130,246,0.3);">' +
+          '↗ Открыть в Safari</a>' +
+        '<div style="color:#6b7280;font-size:0.7rem;margin-top:0.5rem;">или скопируйте ссылку и вставьте в браузер</div>' +
+        '<div style="color:#8a92a6;font-family:monospace;font-size:0.65rem;margin-top:0.4rem;' +
+          'background:rgba(255,255,255,0.05);padding:0.4rem 0.6rem;border-radius:4px;word-break:break-all;">' + url + '</div>';
     }
   }
-}, 10000);
+}, 5000);
 
 // Stats panel — top exporters 
 const statsPanel = document.querySelector('.stats-panel');
